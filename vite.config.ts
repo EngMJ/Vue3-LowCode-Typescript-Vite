@@ -133,7 +133,7 @@ export default defineConfig({
 
     // 类型: string[]
     // 如果你在你的应用程序中有相同依赖的副本（比如monorepos），使用这个选项来强制vite总是将列出的依赖关系解析到相同的副本（从项目根目录）
-    dedupe: [], // todo
+    // dedupe: [], // todo ？？
 
     // 类型: string[]
     // 在解析包的情景导出时允许的附加条件
@@ -152,7 +152,7 @@ export default defineConfig({
       在这里，`import`和`require`被称为‘情景’。情景可以嵌套，并且应该从最特定的到最不特定的指定。
     */
     // Vite 有一个“允许的情景”列表和并且会匹配列表中第一个情景。默认允许的情景是：import，module，browser，default，和基于当前情景为 production/development。resolve.conditions 配置项使得可以指定其他允许的情景。
-    conditions: [], // todo
+    // conditions: [], // todo ？？？
 
     // 类型: string[],
     // 默认: ['module', 'jsnext:main', 'jsnext']
@@ -214,8 +214,8 @@ export default defineConfig({
   json: {
     // 类型: boolean
     // 默认: true
-    // 是否支持从`.json`文件中进行按名导入
-    namedExports: true, // todo
+    // 是否支持从`.json`文件中进行按名导入(按需加载)
+    namedExports: true,
 
     // 类型: boolean
     // 默认: false
@@ -248,12 +248,14 @@ export default defineConfig({
     ```js
     export default {
       esbuild: {
+        jsxFactory: 'h',
+        jsxFragment: 'Fragment'，
         jsxInject: `import React from 'react'`
       }
     }
     ```
   */
-  esbuild: {}, // todo
+  esbuild: {}, // todo esbuild api
 
   // 静态文件处理配置
   // 类型: string | RegExp | (string | RegExp)[]
@@ -361,13 +363,13 @@ export default defineConfig({
     // 类型: object
     // 传递给`chokidar`的文件系统监视器选项
     // https://github.com/paulmillr/chokidar#api
-    watch: {}, // todo
+    // watch: {},
 
     // 类型： 'ssr' | 'html'
     // 以中间件模式创建 Vite 服务器。（不含 HTTP 服务器）
     // 'ssr' 将禁用 Vite 自身的 HTML 服务逻辑，因此你应该手动为 index.html 提供服务。
     // 'html' 将启用 Vite 自身的 HTML 服务逻辑。
-    middlewareMode: 'html' // todo
+    // middlewareMode: 'html'
   },
   // 构建的配置
   build: {
@@ -478,7 +480,7 @@ export default defineConfig({
     // 默认情况下，Vite 会抓取你的 index.html 来检测需要预构建的依赖项。如果指定了 `build.rollupOptions.input`，Vite 将转而去抓取这些入口点。
     // 如果这两者都不适合你的需要，则可以使用此选项指定自定义条目 - 该值需要遵循 fast-glob 模式 ，或者是相对于 vite 项目根的模式数组。这将覆盖掉默认条目推断。
     // https://github.com/mrmlnc/fast-glob#basic-syntax
-    entries: '', // todo
+    entries: '', // 预构建的入口文件
 
     // 类型: string[]
     // 在预构建中强制排除的依赖项
