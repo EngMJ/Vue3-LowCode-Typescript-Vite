@@ -105,6 +105,8 @@ export default defineConfig({
   // 默认: public
   // 作为静态资源服务的文件夹。这个目录中的文件会再开发中被服务于 /，在构建时，会被拷贝到 outDir 根目录，并没有转换，永远只是复制到这里。该值可以是文件系统的绝对路径，也可以是相对于项目根的路径。
   publicDir: path.resolve(__dirname, 'public'),
+  // 存储缓存文件的目录。此目录下会存储预打包的依赖项或 vite 生成的某些缓存文件，使用缓存可以提高性能。如需重新生成缓存文件，你可以使用 --force 命令行选项或手动删除目录。此选项的值可以是文件的绝对路径，也可以是以项目根目录为基准的相对路径。
+  cacheDir: "node_modules/.vite",
   // 解析配置
   resolve: {
     // 类型: Record<string, string> | Array<{ find: string | RegExp, replacement: string }>
@@ -140,11 +142,12 @@ export default defineConfig({
     // `package.json`中，在解析包的入口点时尝试的字段列表。注意，这比从`exports`字段解析的情景导出优先级低。
     // 如果一个入口点从`exports`成功解析，主字段将被忽略
     mainFields: [],
+
     // 类型: string[]
     // 默认: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
     // 导入时想要省略的扩展名列表。
     // 注意：不建议忽略自定义导入类型的扩展名（例如：`.vue`），因为它会干扰IDE和类型支持
-    // extensions: []
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
   },
   // css配置
   css: {
@@ -245,6 +248,8 @@ export default defineConfig({
   // 默认: true
   // 设为 false 可以避免 Vite 清屏而错过在终端中打印某些关键信息。命令行模式下请通过 --clearScreen false 设置。
   clearScreen: true,
+  // 用于加载 .env 文件的目录。可以是一个绝对路径，也可以是相对于项目根的路径。
+  envDir: 'root',
   // 服务相关配置
   server: {
     // 类型: string
@@ -322,7 +327,12 @@ export default defineConfig({
     // 类型: object
     // 传递给`chokidar`的文件系统监视器选项
     // https://github.com/paulmillr/chokidar#api
-    watch: {}
+    watch: {},
+    // 类型： 'ssr' | 'html'
+    // 以中间件模式创建 Vite 服务器。（不含 HTTP 服务器）
+    // 'ssr' 将禁用 Vite 自身的 HTML 服务逻辑，因此你应该手动为 index.html 提供服务。
+    // 'html' 将启用 Vite 自身的 HTML 服务逻辑。
+    middlewareMode: 'html'
   },
   // 构建的配置
   build: {
@@ -404,7 +414,11 @@ export default defineConfig({
     // 类型: number
     // 默认: 500
     // chunk大小警告的限制，以kbs为单位
-    chunkSizeWarningLimit: 500
+    chunkSizeWarningLimit: 500,
+    // 类型： WatcherOptions| null
+    // 默认： null
+    // 设置为 {} 则会启用 rollup 的监听器。在涉及只用在构建时的插件时和集成开发流程中很常用。
+    watch: null
   },
   // 依赖优化
   optimizeDeps: {
@@ -419,6 +433,8 @@ export default defineConfig({
     exclude: [],
     // 类型: string[]
     // 默认情况下，不在 node_modules 中的，链接的包不会被预构建。使用此选项可强制预构建链接的包。
-    include: []
+    include: [],
+    // 打包器有时需要重命名符号以避免冲突。 设置此项为 true 可以在函数和类上保留 name 属性
+    keepNames: false
   }
 })
