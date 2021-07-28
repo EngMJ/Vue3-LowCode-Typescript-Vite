@@ -255,7 +255,7 @@ export default defineConfig({
     }
     ```
   */
-  esbuild: {}, // todo esbuild api
+  // esbuild: {}, // todo esbuild api
 
   // 静态文件处理配置
   // 类型: string | RegExp | (string | RegExp)[]
