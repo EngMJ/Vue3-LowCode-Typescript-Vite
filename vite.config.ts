@@ -18,7 +18,15 @@ import path from 'path'
 * 插件
 * 1. 兼容rollup插件，vite的官方插件基本涵盖了对应的rollup插件
 * 2. 插件排序enforce（pre/post），按需应用 apply（'build'/'serve'）
-*
+* 3. 官方插件
+    @vitejs/plugin-vue
+    提供 Vue 3 单文件组件支持
+    #@vitejs/plugin-vue-jsx
+    提供 Vue 3 JSX 支持（通过 专用的 Babel 转换插件）。
+    #@vitejs/plugin-react-refresh
+    提供 React Fast Refresh 支持
+    #@vitejs/plugin-legacy
+    为打包后的文件提供传统浏览器兼容性支持
 *
 * 多入口页面
 * 1.build.rollupOptions.input
