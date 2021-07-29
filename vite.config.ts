@@ -2,6 +2,100 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
+
+/*
+* vite 意思快速
+* 特点：
+* 1. esbuild更快的打包速度，go语言编写。 通过 依赖预构建将所有代码转换为esm语法并打包成单个模块，再配合cache-control强缓存max-age，实现构建速度的提升。
+* 2. 更好的HMR更新
+* 3. 真正的按需加载构建，使用浏览器为模块化加载工具，以vite为模块提供者。  将依赖与源码在预构建时转化为esm语法，具有更好的按需加载性能。 并且将 源码 使用304协商缓存，从而进一步提升构建效率。
+* 4. 被不同异步chunk共同引用的异步chunk，因为vite的预加载机制，只会被加载一次。
+* 5. 预构建缓存位置：node_modules/.vite，强制 Vite 重新构建依赖，重新运行并添加--force命令
+*
+* webpack差异： 1. 全量的依赖代码加载 2.HMR性能会随着项目的增大而减缓速度
+*
+*
+* 插件
+* 1. 兼容rollup插件，vite的官方插件基本涵盖了对应的rollup插件
+* 2. 插件排序enforce（pre/post），按需应用 apply（'build'/'serve'）
+*
+*
+* 多入口页面
+* 1.build.rollupOptions.input
+*  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        nested: resolve(__dirname, 'nested/index.html')
+      }
+    }
+  }
+*
+*
+* 浏览器兼容
+* 1. build.target 最低支持 es2015
+* 2. vite只处理语法编译，不包含任何 polyfill
+* 3. 传统浏览器兼容使用@vitejs/plugin-legacy插件
+*
+* optimizeDeps
+* 1. 对依赖的预构建的自定义读取与自定义排除，增加可选项include/exclude
+*
+*
+* css特点
+* 1. *.module.css 模块化加载
+* 2. 预置postcss/各种css预处理器， 预处理器依然要要安装依赖
+* 3. css代码分割，将对应代码分割到异步chunk中，加载chunk时加载对应css
+*
+*
+* 静态资源
+* 1. 可使用import加载转化url
+*   import imgUrl from './img.png'
+    document.getElementById('hero-img').src = imgUrl
+    *
+* 2. 使用特殊查询字符转换特定资源，如：
+* // 显式加载资源为一个 URL
+import assetAsURL from './asset.js?url'
+* // 以字符串形式加载资源
+import assetAsString from './shader.glsl?raw'
+* // 导入脚本作为 Worker
+import Worker from './shader.js?worker'
+const worker = new Worker()
+*
+*
+* 环境变量
+* 1. import.meta.env为收纳环境变量的对象
+    import.meta.env.MODE: {string} 应用运行的模式。
+    import.meta.env.BASE_URL: {string} 部署应用时的基本 URL。他由base 配置项决定。
+    import.meta.env.PROD: {boolean} 应用是否运行在生产环境。
+    import.meta.env.DEV: {boolean} 应用是否运行在开发环境 (永远与 import.meta.env.PROD相反)。
+* 2.环境变量可被静态替换，动态 key 取值 import.meta.env[key] 是无效的
+* 3.环境目录.env文件，以 VITE_ 为前缀的环境变量会暴露给客户端
+    .env                # 所有情况下都会加载
+    .env.local          # 所有情况下都会加载，但会被 git 忽略
+    .env.[mode]         # 只在指定模式下加载
+    .env.[mode].local   # 只在指定模式下加载，但会被 git 忽略
+* 4. 打包时，将加载对应mode的变量，如果想覆盖操作，则需在运行打包命令时增加对应的 --mode * 命令
+*
+*
+*
+* json
+* 1. 支持按需加载
+*
+*
+* Glob导入
+* const modules = import.meta.glob('./dir/*.js')
+* 编译为：
+* // vite 生成的代码
+const modules = {
+  './dir/foo.js': () => import('./dir/foo.js'),
+  './dir/bar.js': () => import('./dir/bar.js')
+}
+*
+*
+*
+*
+* */
+
 /*
   // defineConfig支持ts与代码提示
 
@@ -61,55 +155,16 @@ export default defineConfig({
     a: 123
   },
 
-  /*
-    interface Plugin extends RollupPlugin {
-      enforce?: 'pre' | 'post',
-      apply?: 'serve' | 'build',
-      config?: (config: UserConfig, env: ConfigEnv) => UserConfig | null | void,
-      configResolved?: (config: ResolvedConfig) => void,
-      configureServer?: ServerHook,
-      transformIndexHtml?: IndexHtmlTransform,
-      handleHotUpdate?(
-        ctx: HmrContext
-      ): Array<ModuleNode> | void | Promise<Array<ModuleNode> | void>,
-      resolveId?(
-        this: PluginContext,
-        source: string,
-        importer: string | undefined,
-        options: { custom?: CustomPluginOptions },
-        ssr?: boolean
-      ): Promise<ResolveIdResult> | ResolveIdResult
-      load?(
-        this: PluginContext,
-        id: string,
-        ssr?: boolean
-      ): Promise<LoadResult> | LoadResult
-      transform?(
-        this: TransformPluginContext,
-        code: string,
-        id: string,
-        ssr?: boolean
-      ): Promise<TransformResult> | TransformResult
-        }
-  */
-  // 类型：(Plugin | Plugin[])[]
   // 需要用的的插件，配置模式的时候在这儿配置
+  // 类型：(Plugin | Plugin[])[]
   /*
-    @example
-      vue:
-        ```ts
-          import vue from '@vitejs/plugin-vue'
-          ...
-
-          plugins: [vue()]
-        ```
-      react:
-        ```ts
-          import reactRefresh from '@vitejs/plugin-react-refresh'
-          ...
-
-          plugins: [reactRefresh()]
-        ```
+    plugins: [
+    {
+      vue(),
+      apply: 'build', // serve build
+      enforce: 'pre' // pre前置 post后置
+    }
+  ]
   */
   plugins: [vue()],
 
@@ -185,6 +240,8 @@ export default defineConfig({
       ```
     */
     // 配置`css modules`的行为，选项将被传递给`postcss-modules`
+
+    // 以为 *.module.css为后缀名的 CSS 文件都被认为是一个 CSS modules 文件。可以实现js import的按需加载，其行为可在module中进行配置
     modules: {},
 
     // 类型: string | (postcss.ProcessOptions & { plugins?: postcss.Plugin[] })
