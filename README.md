@@ -1,27 +1,74 @@
-# Vue 3 + Typescript + Vite
+# Vue 3 + LowCode + Typescript + Vite
 
-This template should help get you started developing with Vue 3 and Typescript in Vite.
+### Vue
 
-## Recommended IDE Setup
+1. 生命周期函数，组件销毁  beforeUnmount/unmounted
+2. 显示发出事件声明，为对象时能校验事件参数是否正确。 emits，当在 emits 选项中定义了原生事件 (如 click) 时，将使用组件中的事件替代原生事件侦听器（替代vue2x的.native修饰符）
+3. 组件多根节点，非Prop的Attribute继承时会警告，可通过$attrs进行单一绑定
+4. 组件上v-model：
+---
+    //父组件中：
+    <my-component v-model：key.test="val"></my-component>
 
-[VSCode](https://code.visualstudio.com/) + [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur). Make sure to enable `vetur.experimental.templateInterpolationService` in settings!
+---
+       // 子组件
+       app.component('my-component', {
+       props: ['key','keyModifiers'], 
+       // 自定义参数为key，自定义修饰符为 自定义参数 + "Modifiers"
+       // 没有自定义参数时，默认值为 modelValue，自定义修饰符为Modifiers
+       emits: ['update:key'], 
+       // 没有自定义参数时为update:modelValue
+       template: `
+           <input
+           type="text"
+           :value="title"
+           @input="$emit('update:title', $event.target.value)">
+       `，
+          created() {
+            // 在当组件的 created 生命周期钩子触发时才有值
+            console.log(this.keyModifiers.test)  // { test: true}
+          }
+       })
+5. 插槽v-slot:name='作用域变量'，当获取默认插槽作用域时可写 v-slot='作用域变量'。
+   可解构，动态具名插槽v-slot:[dynamicSlotName]，具名插槽缩写v-slot：header => #header
+6. provide类型 Object/Function, Inject类型 Array。实现数据响应，需使用组合式api
+---
+    app.component('todo-list', {
+    provide() {
+        return {
+            todoLength: Vue.computed(() => this.todos.length)
+        }
+    }
+    })
+    app.component('todo-list-statistics', {
+        inject: ['todoLength'],
+        created() {
+            console.log(`Injected property: ${this.todoLength.value}`) // > Injected property: 5
+        }
+    })
+7.异步组件：
 
-### If Using `<script setup>`
+---
+      const { createApp, defineAsyncComponent } = Vue
+      const app = createApp({})
+      const AsyncComp = defineAsyncComponent(
+         () =>
+            new Promise((resolve, reject) => {
+            resolve({
+               template: '<div>I am async!</div>'
+            })
+         })
+         // 或者improt（）
+         // return import('./components/AsyncComponent.vue')
+      )
+      app.component('async-example', AsyncComp)
+8.强制更新 this.$forceUpdate()
+9.
 
-[`<script setup>`](https://github.com/vuejs/rfcs/pull/227) is a feature that is currently in RFC stage. To get proper IDE support for the syntax, use [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar) instead of Vetur (and disable Vetur).
+### Vite
+描述于==》vite.config.ts
 
-## Type Support For `.vue` Imports in TS
+### Vuex - TS
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can use the following:
+### VueRouter - TS
 
-### If Using Volar
-
-Run `Volar: Switch TS Plugin on/off` from VSCode command palette.
-
-### If Using Vetur
-
-1. Install and add `@vuedx/typescript-plugin-vue` to the [plugins section](https://www.typescriptlang.org/tsconfig#plugins) in `tsconfig.json`
-2. Delete `src/shims-vue.d.ts` as it is no longer needed to provide module info to Typescript
-3. Open `src/main.ts` in VSCode
-4. Open the VSCode command palette
-5. Search and run "Select TypeScript version" -> "Use workspace version"
