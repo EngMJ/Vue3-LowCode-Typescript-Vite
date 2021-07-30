@@ -31,22 +31,7 @@
        })
 5. 插槽v-slot:name='作用域变量'，当获取默认插槽作用域时可写 v-slot='作用域变量'。
    可解构，动态具名插槽v-slot:[dynamicSlotName]，具名插槽缩写v-slot：header => #header
-6. provide类型 Object/Function, Inject类型 Array。实现数据响应，需使用组合式api
----
-    app.component('todo-list', {
-    provide() {
-        return {
-            todoLength: Vue.computed(() => this.todos.length)
-        }
-    }
-    })
-    app.component('todo-list-statistics', {
-        inject: ['todoLength'],
-        created() {
-            console.log(`Injected property: ${this.todoLength.value}`) // > Injected property: 5
-        }
-    })
-7.异步组件：
+6.异步组件：
 
 ---
       const { createApp, defineAsyncComponent } = Vue
@@ -62,10 +47,30 @@
          // return import('./components/AsyncComponent.vue')
       )
       app.component('async-example', AsyncComp)
-8.强制更新 this.$forceUpdate()
-9. transition-group/transition内置组件，过渡钩子，过渡class，首次渲染appear属性及对应钩子
-10. 组合式api： setup() / ref(任意类型) / reactive({}) / computed(cb/{get:cb,set:cb}) / watch(key,cb,optionObj) / watchEffect(cb) / provide() / inject() / toRefs()
+7. 强制更新 this.$forceUpdate()
+8. transition-group/transition内置组件，过渡钩子，过渡class，首次渲染appear属性及对应钩子
+9. 组合式api： setup() / ref(任意类型) / reactive({}) / computed(cb/{get:cb,set:cb}) / watch(key,cb,optionObj) / watchEffect(cb) / provide(key,value) / inject(key,可选默认值) / toRefs()
+
 ---
+       provide/Inject实现响应式特性
+       1. options中:
+       app.component('todo-list', {
+       provide() {
+           return {
+               todoLength: Vue.computed(() => this.todos.length)
+           }
+       }
+       })
+       app.component('todo-list-statistics', {
+           inject: ['todoLength'],
+           created() {
+               console.log(`Injected property: ${this.todoLength.value}`) // > Injected property: 5
+           }
+       })
+      2. setup中:
+      provide('location', reactive({*}) / ref(*))
+         
+
       toRefs特性
       1. 可将响应式属性进行解构，并保持响应式特性
       
@@ -107,6 +112,81 @@
       2. 通过返回值进行清除监听，也可在传入函数 的参数onInvalidate函数 进行失效清除。
       3. 数据更新后，监听回调默认在组件更新前执行，如需在更新后执行则watchEffect(cb,{ flush: 'post' }),需要同步更新传入sync
 
+      vue特殊按需加载
+      1. readonly() 只读
+      2. propsType 自定义props传入参数的类型
+
+10.Mixin
+
+---
+      1. 示例
+      const myMixin = {
+         created() {
+            this.hello()
+         },
+         methods: {
+            hello() {
+               console.log('hello from mixin!')
+            }
+         }
+      }
+      
+      const app = Vue.createApp({
+         mixins: [myMixin]
+      })
+
+      2. 选项合并，同名数据的 property 发生冲突时，会以组件自身的数据为优先。同名钩子函数将合并为一个数组，因此都将被调用。值为对象的选项，例如 methods、components 和 directives，将被合并为同一个对象。
+      3. 自定义合并逻辑，app.config.optionMergeStrategies添加函数：
+      const app = Vue.createApp({
+         custom: 'hello!'
+      })
+      app.config.optionMergeStrategies.custom = (toVal, fromVal) => {
+         console.log(fromVal, toVal)
+         // => "goodbye!", undefined
+         // => "hello", "goodbye!"
+         return fromVal || toVal
+      }
+      app.mixin({
+         custom: 'goodbye!',
+         created() {
+            console.log(this.$options.custom) // => "hello!"
+         }
+      })
+      4. 不足之处，易命名冲突，不易复用
+
+11. teleport组件
+---
+      1. 示例，挂载至body
+      app.component('modal-button', {
+      template: `
+         <button @click="modalOpen = true">
+         Open full screen modal! (With teleport!)
+         </button>
+          <teleport to="body">
+            <div v-if="modalOpen" class="modal">
+              <div>
+                I'm a teleported modal! 
+                (My parent is "body")
+                <button @click="modalOpen = false">
+                  Close
+                </button>
+              </div>
+            </div>
+          </teleport>
+      `,
+      data() {
+         return {
+            modalOpen: false
+         }
+      }
+      })
+   
+      2.在同一目标上使用多个 teleport，顺序将是一个简单的追加，稍后挂载将位于目标元素中较早的挂载之后
+12.渲染函数
+13.高阶指南
+14.typeScript支持
+15.自定义指令
+16.插件
 ### Vite
 描述于==》vite.config.ts
 
