@@ -36,6 +36,7 @@
 
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
+import { useStore } from '../store/index'
 export default defineComponent({
   name: 'HelloWorld',
   props: {
@@ -44,8 +45,11 @@ export default defineComponent({
       required: true
     }
   },
-  setup: () => {
+  setup(){
     const count = ref(0)
+    const store = useStore()
+    console.log(store)
+    // console.log(store.state.num)
     return { count }
   }
 })
