@@ -343,7 +343,7 @@
          const { h, resolveDynamicComponent } = Vue
          // `<component :is="name"></component>`
          render() {
-         const Component = resolveDynamicComponent(this.name)
+            const Component = resolveDynamicComponent(this.name)
             return h(Component)
          }
          // 简写版`<component :is="bold ? 'strong' : 'em'"></component>`
@@ -369,7 +369,63 @@
 
 13. 高阶指南
 ---
-      
+      1. 响应式原理
+         1.1 vue3数据代理使用 es6 的 Proxi 进行数据监听
+             vue2使用Object.defineProperty，对象无法检测到 property 的添加或删除，数组无法检测到利用索引直接设置一个数组项 vm.items[indexOfItem] = newValue，无法检测修改数组的长度 vm.items.length = newLength。使用$set进行数据响应式更新 this.$set(this.someObject, 'key', val)
+
+         1.2 effect副作用是 属性更新后所需运行的关键逻辑代码
+            // 第一步：当一个值被读取时进行追踪：proxy 的 get 处理函数中 track 函数记录了该 property 和当前副作用。
+            // 第二步：当某个值改变时进行检测：在 proxy 上调用 set 处理函数。
+            // 第三步：重新运行代码来读取原始值：trigger 函数查找哪些副作用依赖于该 property 并执行它们。
+            const dinner = {
+               meal: 'tacos'
+            }
+            const handler = {
+               // target被代理的对象 、 property属性字符串 、 value修改值 、 receiver 表示原始操作行为所在对象，一般是 Proxy 实例本身
+               get(target, property, receiver) {
+                  // track函数记录property并绑定对应的effect
+                  track(target, property)
+                  // Es6 Reflect将this上的方法及属性，全部绑定到Proxi对象上，使Proxi对象可以拦截到对应方法
+                  // Reflect.get(target, property, receiver) 查找并返回 target 对象的 property 属性,返回值为查找到的对应属性
+                  return Reflect.get(...arguments)
+               },
+               set(target, property, value, receiver) {
+                  // trigger函数查询对应property的effect，并执行effect
+                  trigger(target, property)
+                  // Reflect.set(target, property, value, receiver) 将 target 的 property 属性设置为 value。返回值为 boolean ，true 表示修改成功，false 表示失败。
+                  return Reflect.set(...arguments)
+               }
+            }
+            // proxi返回值是对象的浅拷贝
+            const proxy = new Proxy(dinner, handler)
+
+         1.3 响应式代理中访问嵌套对象，该对象在被返回之前也被转换为一个代理
+            const handler = {
+               get(target, property, receiver) {
+                  track(target, property)
+                  const value = Reflect.get(...arguments)
+                  if (isObject(value)) {
+                  // 将嵌套对象包裹在自己的响应式代理中
+                     return reactive(value)
+                  } else {
+                     return value
+                  }
+               }
+            }
+
+         1.4 视图渲染响应式，组件模板被编译为render函数，该函数被effect包裹成关键逻辑，监听render函数所有的vue property，任何一个发生改变则运行effect
+         1.5 reactive 相当于 Vue 2.x 中的 Vue.observable()，能 深度转换 传递对象的所有嵌套 property。组件中的 data() 返回对象时，它在内部交由 reactive() 使其成为响应式对象
+         1.6 ref能将基础类型转换为响应式，并统一为引用类型的行为模式
+         1.7 toRefs响应式解构
+         1.8 readonly只读响应式
+      2. 渲染机制与优化
+         2.1 使用虚拟DOM树（ast语法树）进行数据更改，并一次性添加进DOM树中，以减少DOM操作，优化性能。
+         2.2 通过diff算法比较虚拟DOM与真实DOM之间差异，然后进行DOM更新
+         2.3 异步更新队列,将在同一事件循环中发生的所有数据变更到一个队列。如果同一个侦听器被多次触发，它只会被推入到队列中一次。在下一个的事件循环“tick”中，Vue 刷新队列并执行实际 (已去重的) 工作（Promise.then、MutationObserver 和 setImmediate，如果执行环境不支持，则会采用 setTimeout(fn, 0)）。
+         2.4 Vue.nextTick(callback)、this.$nextTick(cb) ，回调会在Vue完成更新DOM执行 
+      3. vue2中更改检查警告
+         
+
 14. typeScript支持
 ---
       1. tsconfig.ts 设置严格模式，对this进行类型检查 compilerOptions.strict = true
