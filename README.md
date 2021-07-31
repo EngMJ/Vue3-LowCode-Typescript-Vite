@@ -182,11 +182,199 @@
       })
    
       2.在同一目标上使用多个 teleport，顺序将是一个简单的追加，稍后挂载将位于目标元素中较早的挂载之后
-12.渲染函数
-13.高阶指南
-14.typeScript支持
-15.自定义指令
-16.插件
+12. 渲染函数
+---
+      1. 示例
+      import { h } from 'vue'
+      export default defineComponent({
+         render() {
+            return h(
+               // {String | Object | Function} tag
+               // 一个 HTML 标签名、一个组件、一个异步组件、或
+               // 一个函数式组件。
+               //
+               // 必需的。
+               'div',
+               
+               // {Object} props
+               // 与 attribute、prop 和事件相对应的对象。
+               // 我们会在模板中使用。
+               //
+               // 可选的。
+               {},
+               
+               // {String | Array | Object} children
+               // 子 VNodes, 使用 `h()` 构建,
+               // 或使用字符串获取 "文本 Vnode" 或者
+               // 有插槽的对象。
+               //
+               // 可选的。
+               [
+                  'Some text comes first.',
+                  h('h1', 'A headline'),
+                  h(MyComponent, {
+                  someProp: 'foobar'
+                  })
+               ]
+            )
+         }
+      })
+      
+      2. render与h函数都返回vNode（虚拟DOM），return出去的vNode（h函数）必须唯一。也可返回字符串/数组
+      render() {
+         // 错误 - 重复的 Vnode!
+         // const myParagraphVNode = h('p', 'hi')
+         // return h('div', [
+         // myParagraphVNode, myParagraphVNode
+         // ])
+         return h('div',
+            Array.from({ length: 20 }).map(() => {
+               return h('p', 'hi')
+            })
+         )
+      }
+      
+      // 返回字符串
+         render() {
+            return 'Hello world!'
+         }      
+
+      // 返回数组
+         // 相当于模板 `Hello<br>world!`
+         render() {
+            return [
+               'Hello',
+               h('br'),
+               'world!'
+            ]
+         }
+
+      // 返回jsx模板
+         import AnchoredHeading from './AnchoredHeading.vue'
+         const app = createApp({
+            render() {
+               return (
+                  <AnchoredHeading level={1}>
+                  <span>Hello</span> world!
+                  </AnchoredHeading>
+               )
+            }
+         })
+         app.mount('#demo')
+      
+      // 函数式组件
+         1. 如果你将一个函数作为第一个参数传入 h，它将会被当作一个函数式组件来对待
+         2. 函数式组件没有组件实例，没有生命周期。接受两个参数props,context（attrs、emit、slots）
+         3. 函数就是自身的render函数
+         const FunctionalComponent = (props, context) => {
+            // ...
+         }
+         FunctionalComponent.props = ['value']
+         FunctionalComponent.emits = ['click']
+
+      3.通过名称解析组件
+      const { h, resolveComponent } = Vue
+      render() {
+         const ButtonCounter = resolveComponent('ButtonCounter')
+         return h(ButtonCounter)
+      }
+      4. v-model
+         props: ['modelValue'],
+         emits: ['update:modelValue'],
+         render() {
+            return h(SomeComponent, {
+               modelValue: this.modelValue,
+               'onUpdate:modelValue': value => this.$emit('update:modelValue', value)
+            })
+         }
+      5. 事件绑定，要处理 click 事件，prop 名称应该是 onClick
+      6. 事件修饰符
+         // 方式1
+         render() {
+            return h('input', {
+               onClickCapture: this.doThisInCapturingMode,
+               onKeyupOnce: this.doThisOnce,
+               onMouseoverOnceCapture: this.doThisOnceInCapturingMode
+            })
+         }
+         // 方式2
+         render() {
+            return h('input', {
+               onKeyUp: event => {
+                  // 如果触发事件的元素不是事件绑定的元素
+                  // 则返回
+                  if (event.target !== event.currentTarget) return
+                  // 如果向上键不是回车键，则终止
+                  // 没有同时按下按键 (13) 和 shift 键
+                  if (!event.shiftKey || event.keyCode !== 13) return
+                  // 停止事件传播
+                  event.stopPropagation()
+                  // 阻止该元素默认的 keyup 事件
+                  event.preventDefault()
+                  // ...
+               }
+            })
+         }
+      7. 插槽
+         props: ['message'],
+         render() {
+            // `<div><slot :text="message"></slot></div>`
+            return h('div', {}, this.$slots.default({
+               text: this.message
+            }))
+         }
+      8. 作用域插槽
+         const { h, resolveComponent } = Vue
+         render() {
+            // `<div><child v-slot="props"><span>{{ props.text }}</span></child></div>`
+            return h('div', [
+               h(
+                  resolveComponent('child'),
+                  {},
+                  // 将 `slots` 以 { name: props => VNode | Array<VNode> } 的形式传递给子对象。
+                  {
+                     default: (props) => Vue.h('span', props.text)
+                  }
+               )
+            ])
+         }
+      10. component与is
+         // resolveDynamicComponent
+         const { h, resolveDynamicComponent } = Vue
+         // `<component :is="name"></component>`
+         render() {
+         const Component = resolveDynamicComponent(this.name)
+            return h(Component)
+         }
+         // 简写版`<component :is="bold ? 'strong' : 'em'"></component>`
+         render() {
+            return h(this.bold ? 'strong' : 'em')
+         }
+      11. 内置组件
+         const { h, KeepAlive, Teleport, Transition, TransitionGroup } = Vue
+         // ...
+         render () {
+            return h(Transition, { mode: 'out-in' }, /* ... */)
+         }
+      12. 自定义指令
+         const { h, resolveDirective, withDirectives } = Vue
+         // <div v-pin:top.animate="200"></div>
+         render () {
+            // resolveDirectives是解析指令的函数
+            const pin = resolveDirective('pin')
+            return withDirectives(h('div'), [
+               [pin, 200, 'top', { animate: true }]
+            ])
+         }
+
+13. 高阶指南
+
+14. typeScript支持
+    
+15. 自定义指令
+    
+16. 插件
+
 ### Vite
 描述于==》vite.config.ts
 
