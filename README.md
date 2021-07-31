@@ -368,13 +368,146 @@
          }
 
 13. 高阶指南
-
+---
+      
 14. typeScript支持
-    
+---
+      1. tsconfig.ts 设置严格模式，对this进行类型检查 compilerOptions.strict = true
+      2. webpack中设置ts-loader处理<script lang="ts">代码
+      module: {
+         rules:[
+            {
+              test: /\.tsx?$/,
+              loader: 'ts-loader',
+              options: {
+                appendTsSuffixTo: [/\.vue$/],
+              },
+              exclude: /node_modules/,
+            }
+         ]
+      }
+      3. 使用defineComponent函数定义组件，这样可支持类型检查与语法推荐
+         import { defineComponent } from 'vue'
+         export default defineComponent({
+            // 已启用类型推断
+         })
+      4. 为globalProperties扩充类型，需在根目录或src/typings文件夹中创建*.d.ts文件进行全局声明
+         // 增加this.$http 与 this.$validate 属性
+         declare module '@vue/runtime-core' {
+            export interface ComponentCustomProperties {
+               $http: typeof axios
+               $validate: (data: object, rule: object) => boolean
+            }
+         }
+      5. 属性注解
+      import { defineComponent, PropType, ref } from 'vue'
+      interface Book {
+         title: string
+         author: string
+         year: number
+      }
+      const Component = defineComponent({
+         // emits属性注解
+         emits: {
+            addBook(payload: { bookName: string }) {
+               // perform runtime 验证
+               return payload.bookName.length > 0
+            }
+         },
+         // computed属性注解
+         computed: {
+            greeting(): string {
+               return this.message + '!'
+            },
+         },
+         // props属性注解
+         props: {
+            name: String,
+            id: [Number, String],
+            success: { type: String },
+            callback: {
+               type: Function as PropType<() => void>
+            },
+            book: {
+               type: Object as PropType<Book>,
+               required: true
+            },
+            metadata: {
+               type: null // metadata 的类型是 any
+            }
+         },
+         // setup中props不需要注解，直接引用props组件选项推断类型
+         setup(props) {
+            // 正确, 'message' 被声明为字符串
+            const result = props.message.split('') 
+            // 将引发错误: Property 'filter' does not exist on type 'string'
+            const filtered = props.message.filter(p => p.value) 
+            // ref声明类型，需使用范型
+            const year = ref<string | number>('2020')
+            // 组件ref的类型声明
+            // <myModal ref="modal" />
+            const modal = ref<InstanceType<typeof MyModal>>()
+            // reactive类型声明
+            const book = reactive<Book>({ title: 'Vue 3 Guide' })
+            // or
+            const book: Book = reactive({ title: 'Vue 3 Guide' })
+            // or
+            const book = reactive({ title: 'Vue 3 Guide' }) as Book
+            // dom事件声明注解
+            const handleChange = (evt: Event) => {
+               console.log((evt.target as HTMLInputElement).value)
+            }
+         }
+      })
+      
 15. 自定义指令
-    
+---
+      指令生命周期：created、beforeMount、mounted、beforeUpdate、updated、beforeUnmount、unmounted
+      示例：
+       // <a v-pin:[arg]="200"></a>
+       directives: {
+          pin: {
+            // el为绑定指令的dom
+            // options（arg传递的参数、value传递的值） 
+             mounted(el,options) {
+               // options.value 200
+               // options.arg arg
+             }
+          }
+       }
 16. 插件
-
+---
+      功能：
+         1. 添加全局方法或属性
+         2. 添加全局资源，指令、过滤器、过渡
+         3. 添加全局mixin添加组件选项
+         4. 添加全局实例方法
+         5. 为库提供api
+      创建示例：
+      // plugins/i18n.js
+      // app为由 Vue 的 createApp生成的app 对象
+      // options用户传入的选项
+      export default {
+         install: (app, options) => {
+            app.config.globalProperties.$translate = (key) => {
+               return key.split('.')
+                  .reduce((o, i) => { if (o) return o[i] }, options)
+            }
+            app.provide('i18n', options)
+            app.directive('my-directive', {
+               mounted (el, binding, vnode, oldVnode) {
+                  ...
+               }
+            })
+            app.mixin({
+               created() {
+                  ...
+               }
+            })
+         }
+      }
+      使用：
+      app.use(Plugin, myOptions)
 ### Vite
 描述于==》vite.config.ts
 
