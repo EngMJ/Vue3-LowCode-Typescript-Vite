@@ -42,20 +42,28 @@ export default defineComponent({
   props: {
     msg: {
       type: String,
-      required: true
+      default: '随意内容'
     }
   },
-  setup() {
+  watch: {
+    '$route.params': function(toParams, preParams) {
+      console.log(toParams)
+      console.log(preParams)
+    }
+  },
+  mounted() {
+    console.log(this.$route)
+    console.log(this.$router)
+  },
+  setup(props) {
     const count = ref(0)
     const store = useStore()
-    console.log(store)
-    // console.log(store.state.num)
     return { count }
   }
 })
 </script>
 
-<style scoped>
+<style scoped lang="less">
 a {
   color: #42b983;
 }

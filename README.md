@@ -568,7 +568,28 @@
 ### Vue3 api参考
 
 ---
-   
+      应用配置:
+
+      应用api:
+
+      全局api:
+
+      选项:
+
+      实例property:
+
+      实例方法:
+
+      指令:
+
+      特殊指令:
+
+      内置组件:
+
+      响应式api:
+
+      组合式api:
+
 
 ### Vuex 4x - TS
 
@@ -826,7 +847,45 @@
 ### VueRouter 4x - TS
 
 ---
-
+      功能特点:
+         1. 嵌套路由映射
+         2. 动态路由选择
+         3. 模块化、基于组件的路由配置
+         4. 路由参数、查询、通配符
+         5. 展示由 Vue.js 的过渡系统提供的过渡效果
+         6. 细致的导航控制
+         7. 自动激活 CSS 类的链接
+         8. HTML5 history 模式或 hash 模式
+         9. 可定制的滚动行为
+         10. URL 的正确编码
+      1. router-link组件
+         1.1 转译为正确 `href` 属性的 `<a>` 标签
+         1.2 通过to属性指定跳转路径
+      2. router-view组件, 将显示对应路由的组件
+      3. 参数动态路由,以:设置动态路由参数
+         匹配设置: /users/:username/posts/:postId
+         匹配路径: /users/eduardo/posts/123
+         this.$route.params: { username: 'eduardo', postId: '123' }
+      4. 正则参数动态路由
+         const routes = [
+            // 将匹配所有内容并将其放在 `$route.params.pathMatch` 下
+            { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+            // 将匹配以 `/user-` 开头的所有内容，并将其放在 `$route.params.afterUser` 下
+            { path: '/user-:afterUser(.*)', component: UserGeneric },
+         ]
+      5. 相同组件不同路径,在切换时会复用组件,这时组件的生命周期钩子不会被调用,可通过对params的变化进行切换响应
+         4.1 watch
+            watch: {
+               '$route.params': function(toParams, preParams) {
+                  //...
+               }
+            }
+         4.2 beforeRouteUpdate组件导航守卫
+            async beforeRouteUpdate(to, from) {
+               // 对路由变化做出响应...
+               this.userData = await fetchUser(to.params.id)
+            }
+      6. 
 
 ### Vite
 描述于==》vite.config.ts
