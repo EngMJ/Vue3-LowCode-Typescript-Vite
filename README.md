@@ -784,7 +784,12 @@
             }
          18.2 useStore 组合式函数类型声明
             简化版：
-               // store.ts
+               // 18.1 在store.ts中,将 store 安装到 Vue 应用时提供类型化的 InjectionKey 。
+               // 18.2 在store.ts中,定义类型化的 InjectionKey。
+               // 18.3 在main.ts中,将类型化的 InjectionKey 传给 useStore 方法。
+               // 18.4 在*.vue文件中,使用包装的useStore函数获取store对象
+               
+               // store.ts文件
                import { InjectionKey } from 'vue'
                import { createStore, useStore as baseUseStore, Store } from 'vuex'
                export interface State {
@@ -796,13 +801,20 @@
                      count: 0
                   }
                })
-               
                // 定义自己的 `useStore` 组合式函数
                export function useStore () {
                   return baseUseStore(key)
                }
 
-               // vue 组件
+               // main.ts 文件
+               import { createApp } from 'vue'
+               import { store, key } from './store'
+               const app = createApp({ ... })
+               // 传入 injection key
+               app.use(store, key)
+               app.mount('#app')
+
+               // vue 组件文件
                import { useStore } from './store'
                export default {
                   setup () {

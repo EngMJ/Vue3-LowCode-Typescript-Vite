@@ -6,12 +6,11 @@ import moduleB from './module/b_module'
 export interface State {
     num: number
 }
-
 export const key:InjectionKey<Store<State>> = Symbol()
 
 export const store = createStore<State>({
     // 严格模式,无论何时发生了状态变更且不是由 mutation 函数引起的，将会抛出错误
-    strict: true,
+    // strict: true,
     state:{
         num: 0
     },
