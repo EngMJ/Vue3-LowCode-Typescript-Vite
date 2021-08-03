@@ -37,6 +37,7 @@
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
 import { useStore } from '../store/index'
+import { useRouter } from 'vue-router'
 export default defineComponent({
   name: 'HelloWorld',
   props: {
@@ -58,6 +59,8 @@ export default defineComponent({
   setup(props) {
     const count = ref(0)
     const store = useStore()
+    const router = useRouter()
+    console.log(router)
     return { count }
   }
 })
