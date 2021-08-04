@@ -113,4 +113,6 @@
                 return !!(obj && obj.nodeType === 1)
             }
 
-
+### H5键盘兼容方案
+---
+        
